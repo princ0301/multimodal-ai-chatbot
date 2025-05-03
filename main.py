@@ -11,8 +11,11 @@ from modules.text_processing import get_user_query
 from modules.gemini_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = Flask(__name__)
-#app.secret_key = os.urandom(24)   
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")  
  
 # UPLOAD_FOLDER = 'uploads'
 # if not os.path.exists(UPLOAD_FOLDER):
