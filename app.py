@@ -12,11 +12,13 @@ from modules.gemini_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)   
+#app.secret_key = os.urandom(24)   
  
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# UPLOAD_FOLDER = 'uploads'
+# if not os.path.exists(UPLOAD_FOLDER):
+#     os.makedirs(UPLOAD_FOLDER)
+UPLOAD_FOLDER = '/tmp/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
@@ -104,4 +106,4 @@ def clear_history():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
