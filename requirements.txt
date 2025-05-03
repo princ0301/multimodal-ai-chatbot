@@ -5,3 +5,5 @@ google-generativeai
 pillow 
 apscheduler
 flask
+gunicorn
+werkzeug
