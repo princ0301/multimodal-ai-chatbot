@@ -4,3 +4,4 @@ gradio
 google-generativeai 
 pillow 
 apscheduler
+flask

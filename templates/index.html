@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🩺 Medical AI Assistant</h1>
+            <div class="tab-container">
+                <button class="tab-button active" data-tab="chat-tab">
+                    <i class="fas fa-comment-medical"></i> Medical Chatbot
+                </button>
+                <button class="tab-button" data-tab="reminder-tab">
+                    <i class="fas fa-clock"></i> Medication Reminder
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Chat Interface -->
+            <div class="tab-content active" id="chat-tab">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message assistant">
+                            <div class="message-content">
+                                <p>Hello! I'm your Medical AI Assistant. How can I help you today?</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-controls">
+                        <div class="input-container">
+                            <textarea id="user-input" placeholder="Ask a medical question..."></textarea>
+                            <div class="input-buttons">
+                                <button id="mic-button" title="Voice Input">
+                                    <i class="fas fa-microphone"></i>
+                                </button>
+                                <button id="image-button" title="Upload Image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <input type="file" id="image-input" accept="image/*" style="display: none">
+                                <input type="file" id="audio-input" accept="audio/*" capture style="display: none">
+                            </div>
+                        </div>
+                        
+                        <div class="send-container">
+                            <select id="tone-selector">
+                                <option value="Friendly and Simple">Friendly & Simple</option>
+                                <option value="Detailed and Clinical">Detailed & Clinical</option>
+                                <option value="Explain Like I'm 5">Explain Like I'm 5</option>
+                            </select>
+                            <button id="send-button">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                            <button id="clear-button" title="Clear Chat">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminder Interface -->
+            <div class="tab-content" id="reminder-tab">
+                <div class="reminder-container">
+                    <form id="reminder-form" class="reminder-form">
+                        <h2>⏰ Set Medication Reminder</h2>
+                        
+                        <div class="form-group">
+                            <label for="subject">
+                                <i class="fas fa-pills"></i> Medication Name (required)
+                            </label>
+                            <input type="text" id="subject" name="subject" placeholder="e.g. Insulin Injection" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="date">
+                                    <i class="fas fa-calendar"></i> Date
+                                </label>
+                                <input type="date" id="date" name="date" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="time">
+                                    <i class="fas fa-clock"></i> Time
+                                </label>
+                                <input type="time" id="time" name="time" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">
+                                <i class="fas fa-envelope"></i> Email (required)
+                            </label>
+                            <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-sticky-note"></i> Description (optional)
+                            </label>
+                            <textarea id="description" name="description" placeholder="e.g. Take after dinner"></textarea>
+                        </div>
+                        
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="confirm" name="confirm" required>
+                            <label for="confirm">
+                                <i class="fas fa-check-circle"></i> I confirm I want to receive email reminders
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="submit-button">
+                            <i class="fas fa-bell"></i> Set Reminder
+                        </button>
+                        
+                        <div id="reminder-status" class="status-message"></div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Medical AI Assistant © 2025 | For informational purposes only. Please consult a healthcare provider for medical advice.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

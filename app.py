@@ -1,84 +1,107 @@
-import gradio as gr
+from flask import Flask, render_template, request, jsonify, session
+import os
+import base64
 from datetime import datetime
+import json
+from werkzeug.utils import secure_filename
+ 
 from modules.audio_processing import transcribe_audio
 from modules.image_processing import encode_image_to_base64
 from modules.text_processing import get_user_query
 from modules.gemini_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
 
-# Chatbot logic
-def chatbot_fn(user_message, history, audio_file=None, image_file=None, tone="Friendly and Simple"):
+app = Flask(__name__)
+app.secret_key = os.urandom(24)   
+ 
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/send_message', methods=['POST'])
+def send_message(): 
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+     
+    user_message = request.form.get('message', '')
+    tone = request.form.get('tone', 'Friendly and Simple')
+     
+    audio_file = request.files.get('audio')
     transcribed_text = None
-    if audio_file:
-        transcribed_text = transcribe_audio(audio_file)
-
+    if audio_file and audio_file.filename:
+        audio_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(audio_file.filename))
+        audio_file.save(audio_path)
+        transcribed_text = transcribe_audio(audio_path)
+     
+    image_file = request.files.get('image')
+    image_base64 = None
+    if image_file and image_file.filename:
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(image_file.filename))
+        image_file.save(image_path)
+        image_base64 = encode_image_to_base64(image_path)
+    
     query = get_user_query(user_message, transcribed_text)
-    image_base64 = encode_image_to_base64(image_file) if image_file else None
-
+     
     tone_instruction = f"(Respond in a '{tone}' tone)\n"
     full_query = tone_instruction + query
+     
+    chat_history = session['chat_history']
+    chat_history.append({"role": "user", "content": query})
+     
+    ai_response = generate_medical_response(full_query, image_base64=image_base64, history=chat_history)
+  
+    chat_history.append({"role": "assistant", "content": ai_response})
+    session['chat_history'] = chat_history
+     
+    return jsonify({
+        "user_message": query,
+        "ai_response": ai_response,
+        "transcribed_text": transcribed_text
+    })
 
-    messages = history or []
-    messages.append({"role": "user", "content": full_query})
-
-    response = generate_medical_response(full_query, image_base64=image_base64, history=messages)
-
-    return response
-
-chatbot_ui = gr.ChatInterface(
-    fn=chatbot_fn,
-    additional_inputs=[
-        gr.Audio(sources=["microphone"], type="filepath", label="🎤 Speak (optional)"),
-        gr.Image(type="filepath", label="🖼️ Upload Medical Image (optional)"),
-        gr.Dropdown(["Friendly and Simple", "Detailed and Clinical", "Explain Like I'm 5"],
-                    label="🗣️ Response Tone", value="Friendly and Simple")
-    ],
-    title="🩺 Medical AI Chatbot",
-    description="Ask medical questions using text, voice, or images. The AI will respond like a helpful doctor.",
-    theme="soft",
-    type="messages"
-)
-
-# Reminder logic
-from datetime import datetime
-
-def submit_reminder(subject, description, datetime_val, email, confirm):
-    if not confirm:
-        return "❌ Please check the confirmation box before submitting."
-    if not subject or not datetime_val or not email:
-        return "❌ Please fill in Subject, Date/Time, and Email."
-
-    try:
-        # Convert float timestamp to datetime object
-        reminder_time = datetime.fromtimestamp(datetime_val)
+@app.route('/create_reminder', methods=['POST'])
+def create_reminder():
+    subject = request.form.get('subject', '')
+    description = request.form.get('description', '')
+    email = request.form.get('email', '')
+     
+    date_str = request.form.get('date', '')
+    time_str = request.form.get('time', '')
+    
+    if not subject or not date_str or not time_str or not email:
+        return jsonify({"status": "error", "message": "❌ Please fill in Subject, Date, Time, and Email."})
+    
+    try: 
+        date_parts = date_str.split('-')
+        time_parts = time_str.split(':')
+        
+        year, month, day = map(int, date_parts)
+        hour, minute = map(int, time_parts)
+        
+        reminder_time = datetime(year, month, day, hour, minute)
+         
+        full_description = f"{subject} — {description}" if description else subject
+         
+        add_reminder(email=email, med=full_description, time_obj=reminder_time)
+        
+        return jsonify({
+            "status": "success", 
+            "message": f"✅ Reminder set for '{subject}' at {reminder_time.strftime('%I:%M %p on %B %d, %Y')} to {email}."
+        })
+        
     except Exception as e:
-        return f"❌ Failed to process date/time: {e}"
+        return jsonify({"status": "error", "message": f"❌ Failed to process date/time: {str(e)}"})
 
-    full_description = f"{subject} — {description}" if description else subject
-    add_reminder(email=email, med=full_description, time_obj=reminder_time)
+@app.route('/clear_history', methods=['POST'])
+def clear_history():
+    if 'chat_history' in session:
+        session.pop('chat_history')
+    return jsonify({"status": "success"})
 
-    return f"✅ Reminder set for '{subject}' at {reminder_time.strftime('%I:%M %p on %B %d, %Y')} to {email}."
-
-with gr.Blocks() as reminder_ui:
-    gr.Markdown("### ⏰ Set Medication Reminder")
-
-    with gr.Row():
-        subject_input = gr.Textbox(label="🧪 Subject", placeholder="Insulin Injection")
-        time_input = gr.DateTime(label="📅 Date & Time", value=datetime.now())
-
-    with gr.Row():
-        email_input = gr.Textbox(label="📧 Email", placeholder="user@example.com")
-        confirm_checkbox = gr.Checkbox(label="✅ Confirm to receive email reminder")
-
-    description_input = gr.Textbox(label="📝 Description (optional)", placeholder="Take after dinner")
-
-    send_btn = gr.Button("📩 Set Reminder")
-    output_text = gr.Textbox(label="Status")
-
-    send_btn.click(
-        fn=submit_reminder,
-        inputs=[subject_input, description_input, time_input, email_input, confirm_checkbox],
-        outputs=output_text
-    )
-
-gr.TabbedInterface([chatbot_ui, reminder_ui], ["💬 Medical Chatbot", "⏰ Medication Reminder"]).launch(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
