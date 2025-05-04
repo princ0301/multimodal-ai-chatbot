@@ -4,7 +4,8 @@ import base64
 from datetime import datetime
 import json
 from werkzeug.utils import secure_filename
- 
+import pytz
+
 from modules.audio_processing import transcribe_audio
 from modules.image_processing import encode_image_to_base64
 from modules.text_processing import get_user_query
@@ -73,34 +74,39 @@ def create_reminder():
     subject = request.form.get('subject', '')
     description = request.form.get('description', '')
     email = request.form.get('email', '')
-     
+
     date_str = request.form.get('date', '')
     time_str = request.form.get('time', '')
-    
+
     if not subject or not date_str or not time_str or not email:
         return jsonify({"status": "error", "message": "❌ Please fill in Subject, Date, Time, and Email."})
-    
-    try: 
+
+    try:
         date_parts = date_str.split('-')
         time_parts = time_str.split(':')
-        
+
         year, month, day = map(int, date_parts)
         hour, minute = map(int, time_parts)
-        
-        reminder_time = datetime(year, month, day, hour, minute)
-         
+
+        # ✅ Localize to IST and convert to UTC
+        ist = pytz.timezone('Asia/Kolkata')
+        reminder_time_ist = datetime(year, month, day, hour, minute)
+        reminder_time_ist = ist.localize(reminder_time_ist)
+        reminder_time_utc = reminder_time_ist.astimezone(pytz.utc)
+
         full_description = f"{subject} — {description}" if description else subject
-         
-        add_reminder(email=email, med=full_description, time_obj=reminder_time)
-        
+
+        # Save the UTC time
+        add_reminder(email=email, med=full_description, time_obj=reminder_time_utc)
+
         return jsonify({
-            "status": "success", 
-            "message": f"✅ Reminder set for '{subject}' at {reminder_time.strftime('%I:%M %p on %B %d, %Y')} to {email}."
+            "status": "success",
+            "message": f"✅ Reminder set for '{subject}' at {reminder_time_ist.strftime('%I:%M %p on %B %d, %Y')} (IST) to {email}."
         })
-        
+
     except Exception as e:
         return jsonify({"status": "error", "message": f"❌ Failed to process date/time: {str(e)}"})
-
+    
 @app.route('/clear_history', methods=['POST'])
 def clear_history():
     if 'chat_history' in session:

@@ -1,12 +1,12 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from modules.email_reminder import send_reminder_email
 from modules.db import insert_reminder, get_pending_reminders, mark_reminder_sent
 
 scheduler = BackgroundScheduler()
 
 def check_reminders():
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     for r in get_pending_reminders():
         reminder_id, email, med, time_str = r
         reminder_time = time_str
