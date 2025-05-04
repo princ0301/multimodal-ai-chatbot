@@ -7,3 +7,4 @@ apscheduler
 flask
 gunicorn
 werkzeug
+psycopg2

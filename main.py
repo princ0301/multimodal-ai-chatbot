@@ -10,6 +10,8 @@ from modules.image_processing import encode_image_to_base64
 from modules.text_processing import get_user_query
 from modules.gemini_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
+from modules.db import init_db
+init_db()
 
 from dotenv import load_dotenv
 load_dotenv()
