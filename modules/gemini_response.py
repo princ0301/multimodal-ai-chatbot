@@ -33,7 +33,7 @@ def generate_medical_response(query, image_base64=None, history=None, model_name
 
     # Add current user input
     messages.append(f"User: {query}")
-    full_prompt = f"{system_prompt}\n\n" + "\n".join(messages)
+    full_prompt = f"{system_prompt}\n\n" + "\n".join(messages) + "\nDoctor:"
 
     # If image is included, decode it and use vision model
     if image_base64:
