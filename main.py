@@ -107,6 +107,12 @@ def clear_history():
         session.pop('chat_history')
     return jsonify({"status": "success"})
 
+@app.route('/check_reminders', methods=['GET'])
+def check_reminders_endpoint():
+    from modules.reminder_scheduler import check_reminders
+    check_reminders()
+    return "Checked reminders"
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  
     app.run(host='0.0.0.0', port=port)
