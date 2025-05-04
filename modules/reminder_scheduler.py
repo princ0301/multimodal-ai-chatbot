@@ -9,7 +9,7 @@ def check_reminders():
     now = datetime.now()
     for r in get_pending_reminders():
         reminder_id, email, med, time_str = r
-        reminder_time = datetime.fromisoformat(time_str)
+        reminder_time = time_str
         trigger_time = reminder_time - timedelta(minutes=15)
 
         if abs((now - trigger_time).total_seconds()) <= 60:
