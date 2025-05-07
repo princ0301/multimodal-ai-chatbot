@@ -11,7 +11,7 @@ def load_system_prompt():
     with open(prompt_path, "r", encoding="utf-8") as f:
         return f.read().strip()
 
-def generate_medical_response(query, image_base64=None, history=None, model="meta-llama/llama3-70b-8192"):
+def generate_medical_response(query, image_base64=None, history=None, model="llama3-70b-8192"):
     client = Groq(api_key=GROQ_API_KEY)
     system_prompt = load_system_prompt()
 
