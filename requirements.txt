@@ -11,3 +11,4 @@ psycopg2
 pytz
 pymongo 
 dnspython
+certifi

@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 import certifi
-client = MongoClient(os.environ["MONGODB_URI"], tls=True, tlsCAFile=certifi.where())
+client = MongoClient(
+    os.environ["MONGODB_URI"],
+    tls=True,
+    tlsCAFile=certifi.where()
+)
 db = client["MediAlertDB"]
 reminders_collection = db["reminders"]
 
