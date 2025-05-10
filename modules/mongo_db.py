@@ -7,18 +7,23 @@ from dotenv import load_dotenv
 load_dotenv()
 import certifi
 
-client = MongoClient(
-    os.environ["MONGODB_URI"],
-    tls=True,
-    tlsCAFile=certifi.where(),
-    serverSelectionTimeoutMS=10000
-)
+try:
+    client = MongoClient(
+        os.environ["MONGODB_URI"],
+        tls=True,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=10000
+    )
+    db = client["MediAlertDB"]
+    reminders_collection = db["reminders"]
+    users_collection = db["users"]
+    print("✅ MongoDB connection successful on Render")
 
-db = client["MediAlertDB"]
-reminders_collection = db["reminders"]
+except Exception as e:
+    print("❌ MongoDB connection failed:", e)
 
-def init_db():
-    pass
+# def init_db():
+#     pass
 
 def insert_reminder(email, med, time_obj):
     reminders_collection.insert_one({
