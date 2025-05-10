@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
 import base64
 from datetime import datetime
@@ -11,8 +11,9 @@ from modules.image_processing import encode_image_to_base64
 from modules.text_processing import get_user_query
 from modules.ai_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
-from modules.db import init_db
-init_db()
+from modules.auth import register_user, verify_user
+# from modules.postgr_db import init_db
+# init_db()
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -24,8 +25,43 @@ UPLOAD_FOLDER = '/tmp/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form["email"]
+        password = request.form["password"]
+        success, message = register_user(email, password)
+        if success:
+            return redirect(url_for('login'))
+        else:
+            return render_template('signup.html', error=message)
+    return render_template('signup.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        if verify_user(email, password):
+            session["user"] = email
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error='Invalid email or password')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
+    if 'user' not in session:
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/send_message', methods=['POST'])

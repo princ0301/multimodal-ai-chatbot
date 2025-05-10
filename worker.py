@@ -1,6 +1,6 @@
 # worker.py
 from modules.reminder_scheduler import scheduler
-from modules.db import init_db
+from modules.postgr_db import init_db
 init_db()
 
 print("🔁 Background reminder scheduler started...")

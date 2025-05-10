@@ -8,11 +8,11 @@ from werkzeug.utils import secure_filename
 from modules.audio_processing import transcribe_audio
 from modules.image_processing import encode_image_to_base64
 from modules.text_processing import get_user_query
-from modules.gemini_response import generate_medical_response
+from modules.ai_response import generate_medical_response
 from modules.reminder_scheduler import add_reminder
 
 app = Flask(__name__)
-#app.secret_key = os.urandom(24)   
+app.secret_key = os.urandom(24)   
  
 # UPLOAD_FOLDER = 'uploads'
 # if not os.path.exists(UPLOAD_FOLDER):
